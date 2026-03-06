@@ -58,3 +58,5 @@ Para agendar citas entre dos usuarios sin exponer sus calendarios a la nube:
 - [x] **Ghost Write & Auto-Commit (Phase 30)**: Integración de `openai-whisper` y `summarize` en un flujo de "Shadowing" que detecta cuando un evento concluye e intercepta para redactar actas.
 - [x] **Inter-Agent Negotiation Protocol (Phase 31)**: Negociación autónoma entre secretarios usando encriptación asimétrica vía RSA sin nube intermedia.
 - [x] **Modo Piloto Automático (Phase 32)**: SOUL.md Parser para ejecutar Autonomía Dinámica (L1 a L4), gestionando conflictos y eventos de manera 100% silenciosa en las categorías de confianza (L3/L4).
+- [x] **Upstream Core Integration (Phase 33-35)**: Alineación total con el núcleo 2026 de OpenClaw. Refactorización de biometría al estándar `node_event` y supervisión autónoma de subagentes vía `subagent_ended` para el cierre automático de ciclos en el WAL.
+- [x] **Smart Environment & Multi-Account Concierge (Phase 36)**: Integración de `himalaya` para gestión de cualquier cuenta IMAP/SMTP, `trigger_focus_mode` para control IoT (Hue + Sonos) y Urgent Alert Tier escalable. 🦞

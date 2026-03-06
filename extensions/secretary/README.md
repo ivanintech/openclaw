@@ -117,7 +117,10 @@ Tools natively return `waInteractivePayload` structs for direct injection via Wh
 - **Phase 28-29**: SaaS Mobile-Edge Bridge built. RSA-2048 Asymmetric Tunnel enforcement. Converted SaaS Dashboard to optimized PWA.
 - **Phase 30**: Hyper-Convenience (Ghost Write & Auto-Commit hooks). Logistics triage. Event Shadowing crons.
 - **Phase 31**: Inter-Agent Negotiation Protocol (RSA Handshake) enabling auto-matched peer schedules.
-- **Phase 32**: Modo Piloto Automático (SOUL.md v3). Dynamic autonomy parser enabling SILENT auto-commits for trusted events, removing interactive friction.
+- **Phase 33**: Upstream Sync & Core Alignment. Successfully merged `upstream/main` and resolved critical conflicts in `registry.ts`.
+- **Phase 34**: Structural Refactor. Integrated `joinPresentTextSegments` for robust briefing generation and cleaned up TypeScript architecture.
+- **Phase 35**: Advanced Core Integration (Biometry Standardization + Subagent Supervision) 🦞
+- **Phase 36**: Smart Environment & Multi-Account Concierge. Added `himalaya` support for generic email, `trigger_focus_mode` for IoT control (Hue + Sonos), and an Urgent Alert Tier (Voice + iMessage). 🦞
 
 ---
 
