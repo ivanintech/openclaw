@@ -4,6 +4,9 @@ import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
 import type { OpenClawPluginApi, OpenClawPluginToolContext } from "../../../src/plugins/types.js";
 import { joinPresentTextSegments } from "../../../src/shared/text/join-segments.js";
+import { resolveApiKeyForProvider } from "../../../src/agents/model-auth.js";
+import type { OpenClawConfig } from "../../../src/config/config.js";
+import { loadConfig } from "../../../src/config/config.js";
 import { STRINGS } from "./constants.js";
 import { CRMManager } from "./crm.js";
 import { triggerUrgentAlert } from "./helpers/alerts.js";
@@ -519,8 +522,25 @@ export class SecretaryOrchestrator {
   }
 
   private async handleProactiveResearch(params: any) {
-    if (!process.env.TAVILY_API_KEY)
-      return { content: [{ type: "text", text: "⚠️ Tavily key missing." }] };
+    // AUTO-OAUTH: Intentar obtener API keys automáticamente
+    let tavilyKey = process.env.TAVILY_API_KEY;
+    if (!tavilyKey) {
+      try {
+        const cfg = await loadConfig() as OpenClawConfig;
+        const auth = await resolveApiKeyForProvider({
+          provider: "tavily",
+          cfg,
+        });
+        tavilyKey = auth.apiKey;
+        console.log("[Secretary:Orchestrator] ✅ Auto-detected Tavily API key from auth profiles");
+      } catch {
+        console.log("[Secretary:Orchestrator] ℹ️  Tavily API key not found in auth profiles");
+      }
+    }
+    
+    if (!tavilyKey)
+      return { content: [{ type: "text", text: "⚠️ Tavily key missing. Configure in auth profiles or set TAVILY_API_KEY." }] };
+      
     const results = await fetchRssDigest();
     await updateSessionState(this.workspaceDir, "Research", `Investigated: ${params.title}`);
     return {
@@ -530,8 +550,25 @@ export class SecretaryOrchestrator {
   }
 
   private async handleSearchOpportunities(params: any) {
-    if (!process.env.TAVILY_API_KEY)
-      return { content: [{ type: "text", text: "⚠️ Tavily key missing." }] };
+    // AUTO-OAUTH: Intentar obtener Tavily API key automáticamente
+    let tavilyKey = process.env.TAVILY_API_KEY;
+    if (!tavilyKey) {
+      try {
+        const cfg = await loadConfig() as OpenClawConfig;
+        const auth = await resolveApiKeyForProvider({
+          provider: "tavily",
+          cfg,
+        });
+        tavilyKey = auth.apiKey;
+        console.log("[Secretary:Orchestrator] ✅ Auto-detected Tavily API key for search");
+      } catch {
+        console.log("[Secretary:Orchestrator] ℹ️  Tavily API key not found for search");
+      }
+    }
+    
+    if (!tavilyKey)
+      return { content: [{ type: "text", text: "⚠️ Tavily key missing. Configure in auth profiles or set TAVILY_API_KEY." }] };
+      
     const results = await fetchNearbyVenues(params.location || "Madrid");
     return {
       content: [{ type: "text", text: `💼 Opportunity search found ${results.length} results.` }],
@@ -618,7 +655,23 @@ export class SecretaryOrchestrator {
     };
   }
 
-  private async handleCalendlySync(apiKey: string | undefined, params: any) {
+  private async handleCalendlySync(providedApiKey: string | undefined, params: any) {
+    // AUTO-OAUTH: Intentar obtener API key de Calendly automáticamente
+    let apiKey = providedApiKey;
+    if (!apiKey) {
+      try {
+        const cfg = await loadConfig() as OpenClawConfig;
+        const auth = await resolveApiKeyForProvider({
+          provider: "calendly",
+          cfg,
+        });
+        apiKey = auth.apiKey;
+        console.log("[Secretary:Orchestrator] ✅ Auto-detected Calendly API key from auth profiles");
+      } catch {
+        console.log("[Secretary:Orchestrator] ℹ️  Calendly API key not found in auth profiles");
+      }
+    }
+    
     if (!apiKey) return { content: [{ type: "text", text: STRINGS.es.calendlySyncNoApiKey }] };
     const events = await fetchCalendlyEvents(apiKey);
     if (events.length === 0)

@@ -2,7 +2,7 @@ import { generateKeyPairSync, privateDecrypt } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AuthProfileCredential } from "../../../src/agents/auth-profiles/types.js";
 import type { OpenClawPluginApi } from "../../../src/plugins/types.js";
-import { AutoAuthOrchestrator } from "../../../src/saas/orchestrator.ts";
+import { AutoAuthOrchestrator } from "../../../src/saas/orchestrator.js";
 
 let keyPair: { publicKey: string; privateKey: string } | null = null;
 

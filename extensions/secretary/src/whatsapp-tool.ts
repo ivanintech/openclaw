@@ -19,7 +19,9 @@ async function matonPost(phoneNumberId: string, apiKey: string, body: object): P
   return res.json() as Promise<object>;
 }
 
-export function createWhatsAppTool(_api: OpenClawPluginApi) {
+export function createWhatsAppTool(api: OpenClawPluginApi) {
+  const runtime = api.runtime;
+
   return {
     name: "secretary_whatsapp",
     label: "Secretary WhatsApp Business",
@@ -162,16 +164,16 @@ export function createWhatsAppTool(_api: OpenClawPluginApi) {
       }
 
       if (params.action === "send_voice") {
-        const result_tts = await _api.runtime.tts.textToSpeech({
+        const result_tts = await runtime.tts.textToSpeech({
           text: params.body,
-          cfg: _api.config,
+          cfg: api.config,
         });
 
         if (!result_tts.success || !result_tts.audioPath) {
           throw new Error(`TTS failed: ${result_tts.error}`);
         }
 
-        _api.logger.info(`[whatsapp-tool] TTS generated at ${result_tts.audioPath}`);
+        api.logger.info(`[whatsapp-tool] TTS generated at ${result_tts.audioPath}`);
 
         // Maton expects a publicly accessible URL for media.
         // In a local environment, this requires a media proxy.

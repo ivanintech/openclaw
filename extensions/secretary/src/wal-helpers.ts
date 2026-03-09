@@ -4,8 +4,8 @@ import type { OpenClawPluginApi } from "../../../src/plugins/types.js";
 import { STRINGS } from "./constants.js";
 
 /**
- * Phase 41D: Bridges the Secretary internal state with OpenClaw's Vector Memory (LanceDB).
- * Uses Subagent Delegation to ensure we leverage the core memory configuration and OpenAI keys.
+ * Phase 41D: Bridges the Secretary internal state with OpenClaw's Vector Memory (sqlite-vec or qmd).
+ * Uses Subagent Delegation to ensure we leverage the core memory configuration and embedding keys.
  */
 export async function storeVectorMemory(
   api: OpenClawPluginApi,

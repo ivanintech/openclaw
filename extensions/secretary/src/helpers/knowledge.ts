@@ -2,9 +2,27 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import type { OpenClawPluginApi } from "../../../../src/plugins/types.js";
 import { storeVectorMemory } from "../wal-helpers.js";
+import { resolveApiKeyForProvider } from "../../../../src/agents/model-auth.js";
+import type { OpenClawConfig } from "../../../../src/config/config.js";
+import { loadConfig } from "../../../../src/config/config.js";
 
 export async function syncToNotion(title: string, content: string): Promise<boolean> {
-  const apiKey = process.env.NOTION_API_KEY;
+  // AUTO-OAUTH: Intentar obtener API key desde auth profiles automáticamente
+  let apiKey = process.env.NOTION_API_KEY;
+  if (!apiKey) {
+    try {
+      const cfg = await loadConfig() as OpenClawConfig;
+      const auth = await resolveApiKeyForProvider({
+        provider: "notion",
+        cfg,
+      });
+      apiKey = auth.apiKey;
+      console.log("[Secretary:Knowledge] ✅ Auto-detected Notion API key from auth profiles");
+    } catch {
+      console.log("[Secretary:Knowledge] ℹ️  Notion API key not found in auth profiles, trying env vars");
+    }
+  }
+  
   const dbId = process.env.NOTION_DATABASE_ID;
 
   if (!apiKey || !dbId) {
@@ -93,7 +111,8 @@ export async function syncKnowledge(
     if (ok) results.push("Obsidian");
   }
 
-  if (process.env.NOTION_API_KEY && process.env.NOTION_DATABASE_ID) {
+  // AUTO-OAUTH: Intentar Notion automáticamente (la función syncToNotion ya busca en auth profiles)
+  if (process.env.NOTION_DATABASE_ID) {  // Solo necesitamos el DB ID, la key se obtendrá automáticamente
     const ok = await syncToNotion(title, content);
     if (ok) results.push("Notion");
   }

@@ -1,6 +1,33 @@
 import { execFileAsync } from "./common.js";
+import { resolveApiKeyForProvider } from "../../../../src/agents/model-auth.js";
+import type { OpenClawConfig } from "../../../../src/config/config.js";
+import { loadConfig } from "../../../../src/config/config.js";
 
 export async function fetchRssDigest(): Promise<{ title: string; blog: string; url?: string }[]> {
+  // AUTO-OAUTH: Verificar si tenemos API keys para servicios RSS alternativos
+  try {
+    const cfg = await loadConfig() as OpenClawConfig;
+    
+    // Intentar Feedly o servicios RSS OAuth
+    const rssProviders = ["feedly", "google-reader"];
+    for (const provider of rssProviders) {
+      try {
+        const auth = await resolveApiKeyForProvider({
+          provider,
+          cfg,
+        });
+        console.log(`[Secretary:Intelligence] ✅ Auto-detected ${provider} RSS service`);
+        // TODO: Implementar API calls real al servicio RSS
+        // Por ahora seguimos con el mock
+        break;
+      } catch {
+        continue;
+      }
+    }
+  } catch (error) {
+    console.log("[Secretary:Intelligence] ℹ️  No RSS auth providers found, using CLI mock");
+  }
+
   try {
     const { stdout } = await execFileAsync("blogwatcher", ["articles", "--json"]);
     const raw = JSON.parse(stdout) as any[];
@@ -19,6 +46,20 @@ export async function fetchNearbyVenues(
   lat?: number,
   lng?: number,
 ): Promise<{ name: string; address: string; rating: number }[]> {
+  // AUTO-OAUTH: Verificar si tenemos Google Places API keys
+  try {
+    const cfg = await loadConfig() as OpenClawConfig;
+    const auth = await resolveApiKeyForProvider({
+      provider: "google-places", // o "google-maps"
+      cfg,
+    });
+    console.log("[Secretary:Intelligence] ✅ Auto-detected Google Places API key");
+    // TODO: Implementar Google Places API calls en vez de CLI
+    // Por ahora seguimos con el mock CLI
+  } catch {
+    console.log("[Secretary:Intelligence] ℹ️  No Google Places auth found, using CLI mock");
+  }
+
   try {
     const args = ["search", query, "--json", "--limit", "3", "--min-rating", "4"];
     if (lat !== undefined && lng !== undefined) {

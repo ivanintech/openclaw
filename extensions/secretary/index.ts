@@ -5,7 +5,9 @@ import { generatePairingLink, printMagicLink } from "./src/helpers/pairing.js";
 import { createNegotiationOfferHandler } from "./src/negotiation.js";
 import { createOAuthInjectHandler, createPublicKeyHandler } from "./src/oauth-bridge.js";
 import { createOrchestratorTool, registerProactiveHooks } from "./src/orchestrator.js";
+import { createPdfExtractionTool } from "./src/pdf-extraction-tool.js";
 import { createPrivacyTool } from "./src/privacy-tool.js";
+import { createTranscriptionTool } from "./src/transcription-tool.js";
 import { createWhatsAppWebhookHandler, createShortcutTriggerHandler } from "./src/webhook.js";
 import { createWhatsAppTool } from "./src/whatsapp-tool.js";
 
@@ -15,8 +17,29 @@ export default function register(api: OpenClawPluginApi) {
   // which is normalized by pi-tool-definition-adapter.ts at runtime.
   api.registerTool(createCalendarTool(api) as any);
   api.registerTool(createOrchestratorTool(api) as any);
+  api.registerTool(createPdfExtractionTool(api) as any);
   api.registerTool(createPrivacyTool(api) as any);
+  api.registerTool(createTranscriptionTool(api) as any);
   api.registerTool(createWhatsAppTool(api) as any);
+
+// Register memory search tools from core (sqlite-vec / qmd backend)
+  api.registerTool(
+    (ctx: any) => {
+      const memorySearchTool = api.runtime.tools.createMemorySearchTool?.({
+        config: ctx.config || api.config,
+        agentSessionKey: ctx.sessionKey,
+      });
+      const memoryGetTool = api.runtime.tools.createMemoryGetTool?.({
+        config: ctx.config || api.config,
+        agentSessionKey: ctx.sessionKey,
+      });
+      if (!memorySearchTool || !memoryGetTool) {
+        return null;
+      }
+      return [memorySearchTool, memoryGetTool];
+    },
+    { names: ["memory_search", "memory_get"] },
+  );
 
   // Stage 3: Register proactive monitoring hooks (Lobster 🦞)
   registerProactiveHooks(api);
