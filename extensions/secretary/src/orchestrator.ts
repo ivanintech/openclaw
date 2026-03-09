@@ -1,5 +1,4 @@
-﻿import { execFile } from "node:child_process";
-import fs from "node:fs/promises";
+﻿import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { Type } from "@sinclair/typebox";
@@ -25,6 +24,7 @@ import {
   fetchWeather,
 } from "./helpers/intelligence.js";
 import { triggerHueScene, triggerSonosFocus } from "./helpers/iot.js";
+import { syncKnowledge } from "./helpers/knowledge.js";
 import { waButtonPayload } from "./helpers/whatsapp.js";
 import { CalendarStore } from "./store.js";
 import { VaultManager } from "./vault.js";
@@ -154,6 +154,8 @@ class SecretaryOrchestrator {
         return this.handleSyncTasks(params);
       case "sync_to_notion":
         return this.handleSyncToNotion(params);
+      case "sync_knowledge":
+        return this.handleSyncKnowledge(params);
       case "setup_status":
         return this.handleSetupStatus(apiKey);
       case "setup_proactive":
@@ -250,12 +252,26 @@ class SecretaryOrchestrator {
       params.content || "",
     );
     return {
-      content: [
-        {
-          type: "text",
-          text: success ? "✅ Sincronizado con Notion." : "❌ Error sincronizando con Notion.",
-        },
-      ],
+      content: [{ type: "text", text: success ? "✅ Sync to Notion ok." : "❌ Error Notion." }],
+    };
+  }
+
+  private async handleSyncKnowledge(params: any) {
+    const title = params.title || `Entry_${new Date().toISOString().split("T")[0]}`;
+    const content = params.content || "";
+    const syncedTo = await syncKnowledge(title, content);
+
+    if (syncedTo.length === 0) {
+      return {
+        content: [
+          { type: "text", text: "⚠️ No knowledge integration configured (Notion/Obsidian)." },
+        ],
+      };
+    }
+
+    return {
+      content: [{ type: "text", text: `✅ Conocimiento sincronizado a: ${syncedTo.join(", ")}.` }],
+      details: { syncedTo },
     };
   }
 
@@ -673,9 +689,21 @@ class SecretaryOrchestrator {
       "Audio",
       `Snippet: ${params.transcript.substring(0, 50)}...`,
     );
+
+    // Phase 40: Auto-sync audio notes to Second Brain
+    const syncedTo = await syncKnowledge(
+      `Voice Note ${new Date().toLocaleString()}`,
+      params.transcript,
+    );
+
     return {
-      content: [{ type: "text", text: "🎙️ Nota de voz guardada." }],
-      details: { transcript: params.transcript },
+      content: [
+        {
+          type: "text",
+          text: `🎙️ Nota de voz guardada${syncedTo.length > 0 ? ` y enviada a ${syncedTo.join(", ")}` : ""}.`,
+        },
+      ],
+      details: { transcript: params.transcript, syncedTo },
     };
   }
 
@@ -715,7 +743,22 @@ class SecretaryOrchestrator {
       "Closure",
       `Finalized: ${params.transcript.substring(0, 50)}...`,
     );
-    return { content: [{ type: "text", text: "📝 Cierre procesado (Ghost Write completed)." }] };
+
+    // Phase 40: Auto-sync Ghost Writes to Second Brain
+    const syncedTo = await syncKnowledge(
+      `Acta / Cierre Ghost Write ${new Date().toLocaleDateString()}`,
+      params.transcript,
+    );
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `📝 Cierre procesado (Ghost Write completed)${syncedTo.length > 0 ? ` y guardado en ${syncedTo.join(", ")}` : ""}.`,
+        },
+      ],
+      details: { syncedTo },
+    };
   }
 
   private async handleNegotiateMeeting(params: any) {
