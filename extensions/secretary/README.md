@@ -20,10 +20,14 @@ Entra en [clawsecretary.io](https://clawsecretary.io) y crea tu cuenta. Un asist
 ![Onboarding Wizard](assets/wizard.png)
 
 ### 2. El Enlace Mágico (Emparejamiento QR)
-Escanea el código QR que aparecerá en tu Dashboard Web. Tu móvil abrirá instantáneamente el **Dashboard PWA** configurado y listo para funcionar.
+Al escanear el código QR desde tu móvil (o entrar directamente en la web desde tu dispositivo), sucede la magia del **Mobile-Edge Provisioning**:
+
+- **Self-Healing Node**: Tu móvil se convierte automáticamente en un **Nodo de Ejecución** de OpenClaw. Descarga los componentes necesarios para procesar tus datos localmente.
+- **Túnel Seguro RSA-2048**: Se establece una conexión cifrada punto a punto con tu bridge en la nube.
+- **Zero-Latency State**: El PWA sincroniza tu `SOUL.md` y prepara tu memoria vectorial local (`LanceDB`) para que las respuestas sean instantáneas.
 
 ### 3. Social Sync (OAuth 2.0)
-Conecta Google, Notion o WhatsApp con un click desde tu móvil. Los tokens se inyectan directamente en tu dispositivo local mediante nuestro puente seguro y efímero.
+Conecta Google, Notion o WhatsApp con un click desde tu móvil. Los tokens se inyectan directamente en tu dispositivo local mediante nuestro puente seguro y efímero. **Tus llaves nunca salen de tu bolsillo.**
 
 ### 4. Gestión de Cuenta (SaaS Portal)
 Accede a tu panel para renovar, cancelar o cambiar de plan (Lanzamiento, Pro, Business) de forma 100% visual.
