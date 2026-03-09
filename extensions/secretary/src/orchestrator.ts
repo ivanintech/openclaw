@@ -812,15 +812,58 @@ class SecretaryOrchestrator {
 }
 
 export function registerProactiveHooks(api: OpenClawPluginApi) {
-  api.on("session_start", async () => {
-    const today = new Date().toISOString().split("T")[0];
-    const marker = api.resolvePath("./.last-briefing");
-    try {
-      const last = await fs.readFile(marker, "utf-8");
-      if (last.trim() === today) return;
-    } catch {}
-    await fs.writeFile(marker, today);
-    console.log("[Secretary] Proactive Briefing Triggered.");
+  api.on("gateway_start", async () => {
+    console.log("[Secretary] 🕒 Demonio cronométrico iniciado en background...");
+
+    // Intervalo de evaluación: cada 60 segundos
+    setInterval(async () => {
+      const now = new Date();
+      const hours = now.getHours();
+      const mins = now.getMinutes();
+
+      const orchestrator = new SecretaryOrchestrator(api);
+
+      // Regla 1: Triaje Matutino (08:00 AM)
+      if (hours === 8 && mins === 0) {
+        const today = now.toISOString().split("T")[0];
+        const marker = api.resolvePath("./.last-morning-briefing");
+        try {
+          const last = await fs.readFile(marker, "utf-8");
+          if (last.trim() === today) return; // Ya se hizo hoy
+        } catch {}
+
+        await fs.writeFile(marker, today);
+        console.log("☀️ [Secretary] Ejecutando Triaje Matutino Autónomo...");
+
+        // Disparar las lógicas de resumen (email, rss)
+        try {
+          await orchestrator.execute("cron-morning", { action: "gmail_triager" });
+          await orchestrator.execute("cron-morning", { action: "rss_digest" });
+        } catch (e) {
+          console.error("☀️ [Secretary] Error en Triaje Matutino:", e);
+        }
+      }
+
+      // Regla 2: Cierre Nocturno (22:00 PM)
+      if (hours === 22 && mins === 0) {
+        const today = now.toISOString().split("T")[0];
+        const marker = api.resolvePath("./.last-evening-closure");
+        try {
+          const last = await fs.readFile(marker, "utf-8");
+          if (last.trim() === today) return; // Ya se hizo hoy
+        } catch {}
+
+        await fs.writeFile(marker, today);
+        console.log("🌙 [Secretary] Ejecutando Cierre Nocturno Autónomo...");
+
+        try {
+          await orchestrator.execute("cron-evening", { action: "sync_tasks" });
+          await orchestrator.execute("cron-evening", { action: "logistics_triage" });
+        } catch (e) {
+          console.error("🌙 [Secretary] Error en Cierre Nocturno:", e);
+        }
+      }
+    }, 60000); // Evalúa cada minuto
   });
 
   api.on("tool_result_persist", (event) => {
