@@ -55,7 +55,7 @@ export function createOrchestratorTool(api: OpenClawPluginApi) {
   };
 }
 
-class SecretaryOrchestrator {
+export class SecretaryOrchestrator {
   private store: CalendarStore;
   private vault: VaultManager;
   private crm: CRMManager;
@@ -864,6 +864,24 @@ export function registerProactiveHooks(api: OpenClawPluginApi) {
         }
       }
     }, 60000); // Evalúa cada minuto
+  });
+
+  // Phase 41B: Hyper-Context (Zero-latency environmental awareness)
+  api.on("before_prompt_build", async (event) => {
+    try {
+      // Intentamos leer el estado de la sesión, específicamente la última actividad
+      const statePath = api.resolvePath("./SESSION-STATE.md");
+      const stateContent = await fs.readFile(statePath, "utf-8");
+
+      // Inyectamos esto en el system prompt antes de cada mensaje para evitar que
+      // el LLM tenga que hacer tool calls para saber donde está el usuario
+      return {
+        appendSystemContext: `\n\n=== RECENT REAL-WORLD CONTEXT (ZERO LATENCY) ===\n${stateContent.substring(0, 800)}\n================================================\n`,
+      };
+    } catch {
+      // Falla silente si no hay contexto
+      return {};
+    }
   });
 
   api.on("tool_result_persist", (event) => {

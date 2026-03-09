@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import type { OpenClawPluginApi } from "../../../src/plugins/types.js";
+import { SecretaryOrchestrator } from "./orchestrator.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -164,4 +165,40 @@ async function processVoiceNote(api: OpenClawPluginApi, from: string, audioId: s
 
   // Clean up
   await fs.rm(tempDir, { recursive: true, force: true });
+}
+
+// Phase 41C: Physical Webhooks (Apple Shortcuts / Stream Deck)
+export function createShortcutTriggerHandler(api: OpenClawPluginApi) {
+  return async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
+    // Only handle POST requests
+    if (req.method !== "POST") {
+      res.writeHead(405, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Method Not Allowed" }));
+      return true;
+    }
+
+    try {
+      const payload = await readJsonBody(req);
+      api.logger.info(`[webhook-trigger] Emulating physical action: ${payload.action}`);
+
+      if (!payload.action) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Missing 'action' in payload" }));
+        return true;
+      }
+
+      // Bypass LLM and talk directly to the hyper-capable orchestrator
+      const orchestrator = new SecretaryOrchestrator(api);
+      const result = await orchestrator.execute("webhook-physical", payload);
+
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ status: "success", result }));
+    } catch (err: any) {
+      api.logger.error(`[webhook-trigger] Action execution failed: ${err.message}`);
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: "Internal Server Error", message: err.message }));
+    }
+
+    return true; // Request handled
+  };
 }

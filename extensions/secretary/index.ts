@@ -5,7 +5,7 @@ import { createNegotiationOfferHandler } from "./src/negotiation.js";
 import { createOAuthInjectHandler, createPublicKeyHandler } from "./src/oauth-bridge.js";
 import { createOrchestratorTool, registerProactiveHooks } from "./src/orchestrator.js";
 import { createPrivacyTool } from "./src/privacy-tool.js";
-import { createWhatsAppWebhookHandler } from "./src/webhook.js";
+import { createWhatsAppWebhookHandler, createShortcutTriggerHandler } from "./src/webhook.js";
 import { createWhatsAppTool } from "./src/whatsapp-tool.js";
 
 export default function register(api: OpenClawPluginApi) {
@@ -25,6 +25,14 @@ export default function register(api: OpenClawPluginApi) {
     path: "/plugins/secretary/wa-webhook",
     handler: createWhatsAppWebhookHandler(api),
     auth: "plugin", // Public endpoint; implements its own verification if needed
+    match: "exact",
+  });
+
+  // Phase 41C: Local trigger endpoint for Physical Action Integration (Shortcuts/Stream Deck)
+  api.registerHttpRoute({
+    path: "/plugins/secretary/trigger",
+    handler: createShortcutTriggerHandler(api),
+    auth: "plugin", // Allowed locally without token so automation tools can hit it directly
     match: "exact",
   });
 
